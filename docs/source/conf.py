@@ -36,3 +36,4 @@ html_theme = 'sphinxdoc'
 html_static_path = ['_static']
 
 #body_max_width = 1200
+master_doc = 'index'
