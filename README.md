@@ -5,4 +5,4 @@ Merritt (1998). It is specially based on, and improves on, the Fortran
 code developed by Valluri & Merritt (1998). Besides extracting the
 frequencies with largest amplitudes in the spectrum, the package also
 has tools to print the spectra before extraction of each frequency and
-to ``debug'' the frequency identification around a specific peak.
+to "debug" the frequency identification around a specific peak.
