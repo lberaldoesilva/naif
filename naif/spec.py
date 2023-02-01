@@ -8,15 +8,15 @@ twopi = 2.*np.pi
 def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
                     brent_tol=1e-10, eps_spec=1e-7, n_scan_peak=100):
     """Finds frequencies of peaks in the power spectrum,
-from highest to lowest amplitudes
+    from highest to lowest amplitudes
 
-Parameters
-----------
-f_k: float array (size N)
+    Parameters
+    ----------
+    f_k: float array (size N)
      Time-series associated with a coordinate; e.g.: f = r, or f = r + ivr
-t: float array (size N)
+    t: float array (size N)
      Time-steps for the time-series
-n_freqs: int, optional
+    n_freqs: int, optional
      Maximum number of frequencies to extract. 1 if only the leading frequency
     p: int, optional
          The p parameter of the Window function chi_p; p=0 for no windowing; p=1 for the Hanning window
