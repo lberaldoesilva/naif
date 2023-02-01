@@ -1,4 +1,7 @@
 numpy
 scipy
+matplotlib
+agama
+
 ipykernel
 nbsphinx
