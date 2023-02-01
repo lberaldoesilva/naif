@@ -13,7 +13,8 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
     Parameters
     ----------
     f_k: float array (size N)
-     Time-series associated with a coordinate; e.g.: f = r, or f = r + ivr
+     Time-series associated with a coordinate;
+     e.g.: f = r, or f = r + ivr
     t: float array (size N)
      Time-steps for the time-series
     n_freqs: int, optional
