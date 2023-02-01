@@ -43,21 +43,6 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
     spec_k: (optional, depending on spec) complex array;
           Format (n_freqs, N) or size N
           Full (windowed) spectrum before extraction of kth freq.
-
-    Notes
-    -----
-    This algorithm is based on the NAFF algorithm introduced by [1]_ -- see also [2]_ and [3]_
-
-    References
-    ----------
-    .. [1] Laskar J. , "Introduction to frequency map analysis," 
-       in "Hamiltonian Systems with Three or More Degrees of Freedom", 
-       pp 134–150, 1999.
-    .. [2] Valluri M., Merritt D., "Regular and Chaotic Dynamics of 
-       Triaxial Stellar Systems", 1998, ApJ, 506, 686
-    .. [3] Beraldo e Silva L., Debattista V. P., Anderson S. R.,
-       Valluri M., "Orbital support and evolution of flat profiles
-       of bars (shoulders)", 2023, ApJ
     """
     
     N = len(f_k)

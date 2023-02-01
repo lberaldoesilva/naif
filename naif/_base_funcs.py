@@ -18,15 +18,6 @@ def chi_p(t, p=1):
     -------
     float array
        Window function chi_p
-
-    References
-    ----------
-    .. [1] Laskar J. , "Introduction to frequency map analysis," 
-           in "Hamiltonian Systems with Three or More 
-           Degrees of Freedom", pp 134–150, 1999.
-    .. [2] Beraldo e Silva L., Debattista V. P., Anderson S. R.,
-           Valluri M., "Orbital support and evolution of
-           flat profiles of bars (shoulders)", 2023, ApJ
     """
     
     T = t[-1] - t[0] # total integration time
@@ -51,17 +42,6 @@ def inner_prod(t, u1_chi, u2):
     -------
     complex
        Innter product <u_1, u_2>
-
-    References
-    ----------
-    .. [1] Laskar J. , "Introduction to frequency map analysis," 
-           in "Hamiltonian Systems with Three or More 
-           Degrees of Freedom", pp 134–150, 1999.
-    .. [2] Valluri M., Merritt D., "Regular and Chaotic Dynamics of 
-           Triaxial Stellar Systems", 1998, ApJ, 506, 686
-    .. [3] Beraldo e Silva L., Debattista V. P., Anderson S. R.,
-           Valluri M., "Orbital support and evolution of
-           flat profiles of bars (shoulders)", 2023, ApJ
     """
     
     T = t[-1] - t[0]
@@ -88,17 +68,6 @@ def mn_phi_om(om, f_chi, t):
     -------
     float
         -\|phi(omega)\|
-
-    References
-    ----------
-    .. [1] Laskar J. , "Introduction to frequency map analysis," 
-           in "Hamiltonian Systems with Three or More 
-           Degrees of Freedom", pp 134–150, 1999.
-    .. [2] Valluri M., Merritt D., "Regular and Chaotic Dynamics of 
-           Triaxial Stellar Systems", 1998, ApJ, 506, 686
-    .. [3] Beraldo e Silva L., Debattista V. P., Anderson S. R.,
-           Valluri M., "Orbital support and evolution of
-           flat profiles of bars (shoulders)", 2023, ApJ
     """
 
     return -np.abs(inner_prod(t, f_chi, np.exp(1j*om*t)))
@@ -127,17 +96,6 @@ def gs(t, u, e, chi):
     -------
     complex array
        Orthonormal vectors
-
-    References
-    ----------
-    .. [1] Laskar J. , "Introduction to frequency map analysis," 
-           in "Hamiltonian Systems with Three or More Degrees of Freedom", 
-           pp 134–150, 1999.
-    .. [2] Valluri M., Merritt D., "Regular and Chaotic Dynamics of 
-           Triaxial Stellar Systems", 1998, ApJ, 506, 686
-    .. [3] Beraldo e Silva L., Debattista V. P., Anderson S. R.,
-           Valluri M., "Orbital support and evolution of flat profiles
-           of bars (shoulders)", 2023, ApJ
     """
     
     k = len(e)
