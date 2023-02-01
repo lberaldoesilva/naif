@@ -2,7 +2,7 @@ API reference
 =============
 
 ``naif``
-----------
+--------
 
 .. autofunction:: naif.find_peak_freqs
 
