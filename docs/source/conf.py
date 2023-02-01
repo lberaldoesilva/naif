@@ -19,8 +19,8 @@ release = '0.1'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['nbsphinx', "sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.viewcode"]
-nbsphinx_prompt_width = 0 # no prompts in nbsphinx
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon", "sphinx.ext.viewcode", "nbsphinx"]
+#nbsphinx_prompt_width = 0 # no prompts in nbsphinx
 
 templates_path = ['_templates']
 exclude_patterns = ['.ipynb_checkpoints/*']
