@@ -8,31 +8,26 @@ twopi = 2.*np.pi
 def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
                     brent_tol=1e-10, eps_spec=1e-7, n_scan_peak=100):
     """Finds frequencies of peaks in the power spectrum,
-    from highest to lowest amplitudes
+from highest to lowest amplitudes
 
-    Parameters
-    ----------
-    f_k: float array (size N)
-         Time-series associated with a coordinate;
-         e.g.: f = r, or f = r + ivr
-    t: float array (size N)
-         Time-steps for the time-series
-    n_freqs: int, optional
-         Maximum number of frequencies to extract.
-         1 if only the leading frequency
+Parameters
+----------
+f_k: float array (size N)
+     Time-series associated with a coordinate; e.g.: f = r, or f = r + ivr
+t: float array (size N)
+     Time-steps for the time-series
+n_freqs: int, optional
+     Maximum number of frequencies to extract. 1 if only the leading frequency
     p: int, optional
-         The p parameter of the Window function chi_p;
-         p=0 for no windowing; p=1 for the Hanning window
+         The p parameter of the Window function chi_p; p=0 for no windowing; p=1 for the Hanning window
     spec: boolean, optional
          Output the spectra before extraction of each frequency?
     brent_tol: float, optional
          Tolearance error for Brent's minimum finder method
     eps_spec: float, optional
-         Minimum amplitude for keeping extracting freqss.
-         If below that, it ends before extracting all freqs.
+         Minimum amplitude for keeping extracting freqss. If below that, it ends before extracting all freqs.
     n_scan_peak: int, optional
-         Number of points where phi(omega) is evaluated.
-         In case Brent's method fails (rarely used).
+         Number of points where phi(omega) is evaluated. In case Brent's method fails (rarely used).
 
     Returns
     -------
@@ -41,8 +36,7 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
     a_k: complex array or number
           Amplitudes associated to the frequencies om_k
     spec_k: (optional, depending on spec) complex array;
-          Format (n_freqs, N) or size N
-          Full (windowed) spectrum before extraction of kth freq.
+          Format (n_freqs, N) or size N. Full (windowed) spectrum before extraction of kth freq.
     """
     
     N = len(f_k)
