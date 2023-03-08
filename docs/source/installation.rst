@@ -13,8 +13,9 @@ Installing
   
   pip install --user naif
 
-It can also be installed by downloading the source or cloning the GitHub
-repository and typing::
+It can also be installed by downloading the source or cloning the
+`GitHub repository <https://github.com/lberaldoesilva/naif>`__. and
+typing::
 
   python setup.py install --user
 

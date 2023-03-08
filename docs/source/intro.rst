@@ -5,7 +5,7 @@ Introduction
 of frequencies. It implements the NAFF algorithm introduced by Laskar
 (1990, 1993) and further developed by Valluri & Merritt (1998) -- see
 also Price-Whelan et al (2016) and their released package `SuperFreq
-<https://superfreq.readthedocs.io/en/latest/>`_. It is based on the
+<https://superfreq.readthedocs.io/en/latest/>`__ . It is based on the
 Fortran implementation of Valluri & Merritt (1998), but it introduces
 a few improvements. It is also intended to be a transparent, well
 documented and easy-to-use implementation.
