@@ -3,12 +3,22 @@ Introduction
 
 :math:`\texttt{naif}` is a pure-python package for numerical analysis
 of frequencies. It implements the NAFF algorithm introduced by Laskar
-(1990, 1993) and further developed by Valluri & Merritt (1998) -- see
-also Price-Whelan et al (2016) and their released package `SuperFreq
-<https://superfreq.readthedocs.io/en/latest/>`__ . It is based on the
-Fortran implementation of Valluri & Merritt (1998), but it introduces
-a few improvements. It is also intended to be a transparent, well
-documented and easy-to-use implementation.
+(`1990
+<https://ui.adsabs.harvard.edu/abs/1990Icar...88..266L/abstract>`__,
+`1999
+<https://link.springer.com/chapter/10.1007/978-94-011-4673-9_13>`__)
+and further developed by `Valluri & Merritt (1998)
+<https://ui.adsabs.harvard.edu/abs/1998ApJ...506..686V/abstract>`__ --
+see also `Price-Whelan et al (2016)
+<https://ui.adsabs.harvard.edu/abs/2016MNRAS.455.1079P/abstract>`__
+and their released package `SuperFreq
+<https://superfreq.readthedocs.io/en/latest/>`__. It is based on the
+`Fortran implementation
+<https://sites.lsa.umich.edu/mvalluri/software/>`__ of `Valluri &
+Merritt (1998)
+<https://ui.adsabs.harvard.edu/abs/2016MNRAS.455.1079P/abstract>`__,
+but it introduces a few improvements. It is also intended to be a
+transparent, well documented and easy-to-use implementation.
 
 To start using it, we first import the relevant modules::
 
