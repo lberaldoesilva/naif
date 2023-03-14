@@ -6,3 +6,8 @@ code developed by Valluri & Merritt (1998). Besides extracting the
 frequencies with largest amplitudes in the spectrum, the package also
 has tools to print the spectra before extraction of each frequency and
 to "debug" the frequency identification around a specific peak.
+
+A summary of the algorithm and some discussion on frequency analyses
+can be found in [Beraldo e Silva et al
+2023](https://ui.adsabs.harvard.edu/abs/2023arXiv230304828B/abstract),
+which should be cited if you use $\texttt{naif}$.
