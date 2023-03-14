@@ -20,6 +20,11 @@ Merritt (1998)
 but it introduces a few improvements. It is also intended to be a
 transparent, well documented and easy-to-use implementation.
 
+The algorithm is summarized in Appendix A of `Beraldo e Silva et al
+2023
+<https://ui.adsabs.harvard.edu/abs/2023arXiv230304828B/abstract>`__. If
+you use :math:`\texttt{naif}` for a publication, please cite this paper.
+
 To start using it, we first import the relevant modules::
 
   >>> import numpy as np
@@ -45,7 +50,12 @@ analysis. This can be the coordinate itself, e.g.::
   >>> fr = r
   
 For the azimuthal component, however, it is advantageous to define the
-complex array (see Papaphilippou & Laskar, 1996, 1998 and Beraldo e Silva+ 2023)::
+complex array (see Papaphilippou & Laskar, `1996
+<https://ui.adsabs.harvard.edu/abs/1996A%26A...307..427P/abstract>`__,
+`1998
+<https://ui.adsabs.harvard.edu/abs/1998A%26A...329..451P/abstract>`__
+and `Beraldo e Silva et al 2023
+<https://ui.adsabs.harvard.edu/abs/2023arXiv230304828B/abstract>`__)::
 
   >>> fphi = np.sqrt(2.*np.abs(Lz))*(np.cos(phi) + 1j*np.sin(phi))
        
