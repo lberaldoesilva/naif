@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
     
 setuptools.setup(
     name="naif",
-    version="0.1.1",
+    version="0.1.2",
     author="Leandro Beraldo e Silva",
     author_email="lberaldoesilva@gmail.com",
     description="Numerical Analysis and Integer combinations of Frequencies",
