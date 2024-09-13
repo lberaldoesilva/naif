@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(include=['naif','naif.*']),
     python_requires='>=3',
-    install_requires=["numpy", "math", "scipy>=1.6.0"],
+    install_requires=["numpy", "scipy>=1.6.0"],
     package_data={"": ["README.md","LICENSE"]},
     license='MIT'
 )
