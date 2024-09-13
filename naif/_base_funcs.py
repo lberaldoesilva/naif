@@ -46,7 +46,7 @@ def inner_prod(t, u1_chi, u2):
     
     T = t[-1] - t[0]
     integrand = u1_chi*np.conj(u2)
-    return (1./T)*integrate.simps(integrand, t)
+    return (1./T)*integrate.simpson(integrand, t)
 # -----------------------
 def mn_phi_om(om, f_chi, t):
     """ Calculates -\|(phi(omega)\| = -\|<f(t), exp(i om t)>\|
