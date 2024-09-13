@@ -9,3 +9,6 @@ python:
     - method: pip
       path: .
     - requirements: docs/requirements.txt
+
+build:
+  os: ubuntu-22.04  # This is the correct value for Read the Docs
