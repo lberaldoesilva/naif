@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from scipy import integrate
 
 twopi = 2.*np.pi
@@ -21,8 +22,8 @@ def chi_p(t, p=1):
     """
     
     T = t[-1] - t[0] # total integration time
-    fact_p = np.math.factorial(p)
-    fact_2p = np.math.factorial(2*p)
+    fact_p = math.factorial(p)
+    fact_2p = math.factorial(2*p)
     return (2.**p*fact_p**2/fact_2p)*(1. + np.cos(twopi*t/T))**p
 # -----------------------
 # Scalar product with Window function:
@@ -46,7 +47,7 @@ def inner_prod(t, u1_chi, u2):
     
     T = t[-1] - t[0]
     integrand = u1_chi*np.conj(u2)
-    return (1./T)*integrate.simpson(integrand, t)
+    return (1./T)*integrate.simpson(integrand, x=t)
 # -----------------------
 def mn_phi_om(om, f_chi, t):
     """ Calculates -\|(phi(omega)\| = -\|<f(t), exp(i om t)>\|
