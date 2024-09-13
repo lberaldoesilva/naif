@@ -12,6 +12,8 @@ python:
 
 build:
   os: ubuntu-22.04  # This is the correct value for Read the Docs
+  commands:
+    - pip install -r docs/requirements.txt
 #  tools:
 #    sphinx: "latest"  # or specify a version like "4.0.0"
 #    pip: "latest"  # or specify a version like "21.1.2"
