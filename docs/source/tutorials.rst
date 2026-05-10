@@ -7,4 +7,4 @@ Tutorials
 
    tutorial_isochrone.ipynb
    tutorial_spectrum.ipynb
-   tutorial_parallel.rst
+   tutorial_parallel.ipynb

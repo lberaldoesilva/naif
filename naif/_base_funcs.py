@@ -26,8 +26,41 @@ def chi_p(t, p=1):
     fact_2p = math.factorial(2*p)
     return (2.**p*fact_p**2/fact_2p)*(1. + np.cos(twopi*t/T))**p
 # -----------------------
+def abs_fft_spectrum(f):
+    """Return abs(fft(f)/N) with full FFT ordering and length N.
+
+    If f is real, use rfft internally and reconstruct the full-length
+    spectrum with the same ordering as np.fft.fft.
+    This should be faster than using fft.
+
+    If f is complex, use the usual complex FFT.
+    """
+
+    N = len(f)
+
+    if np.isrealobj(f):
+        spec_pos = np.abs(np.fft.rfft(f) / N)
+        spec = np.zeros(N, dtype=float)
+        n_pos = len(spec_pos)
+
+        # Positive frequencies: 0, +df, ..., +Nyquist if N even
+        spec[:n_pos] = spec_pos
+
+        # Negative frequencies reconstructed by Hermitian symmetry
+        if N % 2 == 0:
+            # even N: rfft includes both zero and Nyquist;
+            # neither should be duplicated
+            spec[n_pos:] = spec_pos[1:-1][::-1]
+        else:
+            # odd N: no exact Nyquist term
+            spec[n_pos:] = spec_pos[1:][::-1]
+        return spec
+    else:
+        return np.abs(np.fft.fft(f) / N)
+#-------------------------
 # Scalar product with Window function:
-def inner_prod(t, u1_chi, u2):
+#def inner_prod(t, u1_chi, u2):
+def inner_prod(t, u1_chi, u2, axis=-1):
     """ Inner product <u_1, u_2>
 
     Parameters
@@ -38,6 +71,8 @@ def inner_prod(t, u1_chi, u2):
        u_1 * chi_p(t) - 1st arg. of inner prod. times window
     u_2: complex array
        Second argument of inner product
+    axis : int, optional
+        Axis along which to integrate. Default is -1 (just to vectorize the call, making it faster)
 
     Returns
     -------
@@ -47,7 +82,7 @@ def inner_prod(t, u1_chi, u2):
     
     T = t[-1] - t[0]
     integrand = u1_chi*np.conj(u2)
-    return (1./T)*integrate.simpson(integrand, x=t)
+    return (1./T)*integrate.simpson(integrand, x=t, axis=axis)
 # -----------------------
 def mn_phi_om(om, f_chi, t):
     """ Calculates -\|(phi(omega)\| = -\|<f(t), exp(i om t)>\|
@@ -67,11 +102,20 @@ def mn_phi_om(om, f_chi, t):
 
     Returns
     -------
-    float
-        -\|phi(omega)\|
+    float or ndarray
+        -\|phi(omega)\|. Scalar if `om` is scalar, otherwise array.
     """
 
-    return -np.abs(inner_prod(t, f_chi, np.exp(1j*om*t)))
+    #return -np.abs(inner_prod(t, f_chi, np.exp(1j*om*t)))
+    om = np.asarray(om)
+    # If on is scalar, same as old version:
+    if om.ndim == 0:
+        return -np.abs(inner_prod(t, f_chi, np.exp(1j * om * t)))
+
+    # Vectorized behavior: one row per trial frequency
+    exp_om_t = np.exp(1j * om[:, None] * t[None, :])
+
+    return -np.abs(inner_prod(t, f_chi[None, :], exp_om_t, axis=1))
 # -----------------------
 def gs(t, u, e, chi):
     """ Gram-Schimidt orthonomal basis

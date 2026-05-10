@@ -1,12 +1,12 @@
 import numpy as np
 from scipy.optimize import minimize_scalar as minimize
-from ._base_funcs import inner_prod, gs, chi_p, mn_phi_om
+from ._base_funcs import inner_prod, gs, chi_p, mn_phi_om, abs_fft_spectrum
 
 twopi = 2.*np.pi
 
 #--------------------
 def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
-                    brent_tol=1e-10, eps_spec=1e-7, n_scan_peak=100):
+                    brent_tol=1e-10, eps_spec=1e-7, n_scan_peak=100, verbose=True):
     """Finds frequencies of peaks in the power spectrum,
     from highest to lowest amplitudes
 
@@ -52,7 +52,12 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
     e = np.zeros((n_freqs, N), dtype=np.complex128)
     om_k = np.zeros(n_freqs) 
     a_k = np.zeros(n_freqs, dtype=np.complex128)
-    spec_k = np.zeros((n_freqs, N))
+
+    #    spec_k = np.zeros((n_freqs, N))
+    if spec:
+        spec_k = np.zeros((n_freqs, N))
+    else:
+        spec_k = None
     
     # frequencies where DFT is evaluated:
     om = twopi*np.fft.fftfreq(N, T/N)
@@ -77,10 +82,16 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
         # FT_k = np.fft.fft(f_k)/N
         # but windowing from the start identifies freqs.
         # in the right order, and the 1st is the leading one:
-        spec_k[k] = np.abs(np.fft.fft(f_k_chi)/N) 
+
+        # spec_k[k] = np.abs(np.fft.fft(f_k_chi)/N)
+        spec_now = abs_fft_spectrum(f_k_chi)
+        #spec_now = np.abs(np.fft.fft(f_k_chi) / N)
+        if spec:
+            spec_k[k] = spec_now
 
         # identify raw (discrete) max. and a range around it:
-        om_max = om[np.argmax(spec_k[k])]
+        #om_max = om[np.argmax(spec_k[k])]
+        om_max = om[np.argmax(spec_now)]
         om_inf = om_max - fourpi_T
         om_sup = om_max + fourpi_T
 
@@ -106,15 +117,17 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
             # (or the interval is not large enough)
             # and the minimum is not well bracketed,
             # we scan mn_phi_om looking for the local minimum
-            print ('Frequency ',k+1,
-                   ' - Peak not found in first shot. Refining...')
+            if verbose:
+                print ('Frequency ',k+1,
+                       ' - Peak not found in first shot. Refining...')
             try:
                 scan_om = np.linspace(om_inf, om_sup, n_scan_peak)
-                scan_phi = np.zeros(len(scan_om))
-                for i in range(n_scan_peak):
-                    scan_phi[i] = mn_phi_om(scan_om[i],
-                                            f_k_chi,
-                                            t_sym)
+                # Vectorizing mn_phi_om (faster), but we can use with scalar too:
+                
+                # scan_phi = np.zeros(len(scan_om))
+                # for i in range(n_scan_peak):
+                #     scan_phi[i] = mn_phi_om(scan_om[i], f_k_chi, t_sym)
+                scan_phi = mn_phi_om(scan_om, f_k_chi, t_sym)
                 # identify among where derivative changes sign,
                 # the one with minimum value:
                 d1 = np.diff(scan_phi)
@@ -167,3 +180,5 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
         return out_om, out_a
     else:
         return out_om, out_a, out_spec
+#-------------------------------------------------
+
