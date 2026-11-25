@@ -85,3 +85,31 @@ judiciously.
 
 See the tutorials for a more complete example and discussion on the
 extraction of the fundamental frequencies.
+
+Performance and reproducibility
+-------------------------------
+
+The frequency refinement and the amplitudes are computed from inner
+products :math:`\langle f, e^{i\omega t}\rangle`, i.e. integrals over
+the time-series evaluated with Simpson's rule. When the time-steps are
+uniform (as is the case for most orbit integrators), Simpson's rule
+reduces to a dot product with a fixed set of weights, which are
+computed once per call (see :func:`naif.simpson_weights`). This makes
+:func:`naif.find_peak_freqs` about 3 times faster than calling
+:func:`scipy.integrate.simpson` in every inner product, with the same
+result up to round-off: the frequencies differ from the ones obtained
+with :func:`scipy.integrate.simpson` at the level set by the tolerance
+of Brent's method (``brent_tol``). If the time-steps are not uniform,
+:func:`scipy.integrate.simpson` is used automatically. The behavior of
+version 0.1.3 and earlier (:func:`scipy.integrate.simpson` in every
+inner product) can be recovered exactly with::
+
+  >>> om_r, a_r = naif.find_peak_freqs(fr, t, fast_simpson=False)
+
+Note also that for **real** time-series (e.g. ``fr = r``) the spectral
+lines at :math:`+\omega` and :math:`-\omega` have exactly the same
+amplitude. Their relative order in the output (and, if ``n_freqs`` is
+odd, which one of the pair is extracted last) is therefore set by
+round-off and should not be given any meaning; for these series, only
+:math:`|\omega|` is relevant. Complex time-series (e.g. ``fphi``
+above) do not have this degeneracy.

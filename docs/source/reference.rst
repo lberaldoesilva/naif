@@ -11,6 +11,8 @@ API reference
 
 .. autofunction:: naif.mn_phi_om
 
+.. autofunction:: naif.simpson_weights
+
 .. autofunction:: naif._base_funcs.abs_fft_spectrum
 
 .. autofunction:: naif._base_funcs.inner_prod

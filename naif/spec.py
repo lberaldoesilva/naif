@@ -1,12 +1,13 @@
 import numpy as np
 from scipy.optimize import minimize_scalar as minimize
-from ._base_funcs import inner_prod, gs, chi_p, mn_phi_om, abs_fft_spectrum
+from ._base_funcs import inner_prod, gs, chi_p, mn_phi_om, abs_fft_spectrum, simpson_weights
 
 twopi = 2.*np.pi
 
 #--------------------
 def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
-                    brent_tol=1e-10, eps_spec=1e-7, n_scan_peak=100, verbose=True):
+                    brent_tol=1e-10, eps_spec=1e-7, n_scan_peak=100, verbose=True,
+                    fast_simpson=True):
     """Finds frequencies of peaks in the power spectrum,
     from highest to lowest amplitudes
 
@@ -29,6 +30,14 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
          Minimum amplitude for keeping extracting freqss. If below that, it ends before extracting all freqs.
     n_scan_peak: int, optional
          Number of points where phi(omega) is evaluated. In case Brent's method fails (rarely used).
+    verbose: boolean, optional
+         Print a message when the peak is not bracketed at the first attempt?
+    fast_simpson: boolean, optional
+         If True (default) and t is uniformly sampled, the Simpson-rule inner
+         products are computed as dot products with precomputed weights
+         (see naif.simpson_weights), which is several times faster and gives
+         the same result up to round-off. If False, or if t is not uniformly
+         sampled, scipy.integrate.simpson is used in every inner product.
 
     Returns
     -------
@@ -47,6 +56,9 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
     T = t[-1] - t[0]
     fourpi_T = 2.*twopi/T
     chi = chi_p(t_sym, p=p) # window function
+    # Simpson weights for the time grid, computed once and reused in all
+    # inner products of this call (None -> scipy.integrate.simpson):
+    w = simpson_weights(t_sym) if fast_simpson else None
 
     # normal vectors from Gram-Schimidt orthonomalization:
     e = np.zeros((n_freqs, N), dtype=np.complex128)
@@ -71,7 +83,7 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
     # because om[0] = 0:
     e_0 = np.ones_like(t_sym)
     # complex amplitude of om = 0:
-    a_0 = inner_prod(t_sym, f_k_chi, e_0)
+    a_0 = inner_prod(t_sym, f_k_chi, e_0, w=w)
     # Extract peak from time-series:
     f_k = f_k - a_0*e_0
 
@@ -97,9 +109,9 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
 
         # mn_phi(omega) = - |<f(t), e^(i*omega*t)>|
         # values used as brackets in Brent's method:
-        mn_phi_om_max = mn_phi_om(om_max, f_k_chi, t_sym)
-        mn_phi_om_inf = mn_phi_om(om_inf, f_k_chi, t_sym)
-        mn_phi_om_sup = mn_phi_om(om_sup, f_k_chi, t_sym)
+        mn_phi_om_max = mn_phi_om(om_max, f_k_chi, t_sym, w)
+        mn_phi_om_inf = mn_phi_om(om_inf, f_k_chi, t_sym, w)
+        mn_phi_om_sup = mn_phi_om(om_sup, f_k_chi, t_sym, w)
         
         # Normally, phi(omega) has a maximum
         # (and -phi a minimum) near om_max,
@@ -107,7 +119,7 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
         # -phi(om_sup) > -phi(omega_max):
         if ((mn_phi_om_inf > mn_phi_om_max) &
             (mn_phi_om_sup > mn_phi_om_max)):
-            best_peak = minimize(mn_phi_om, args=(f_k_chi, t_sym), 
+            best_peak = minimize(mn_phi_om, args=(f_k_chi, t_sym, w), 
                                  bracket=(om_inf, om_max, om_sup), 
                                  tol=brent_tol, method='brent')
             # the frequency at the peak:
@@ -127,7 +139,7 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
                 # scan_phi = np.zeros(len(scan_om))
                 # for i in range(n_scan_peak):
                 #     scan_phi[i] = mn_phi_om(scan_om[i], f_k_chi, t_sym)
-                scan_phi = mn_phi_om(scan_om, f_k_chi, t_sym)
+                scan_phi = mn_phi_om(scan_om, f_k_chi, t_sym, w)
                 # identify among where derivative changes sign,
                 # the one with minimum value:
                 d1 = np.diff(scan_phi)
@@ -149,10 +161,10 @@ def find_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
             e[k] = u
         else:
             # Gram-Schimidt ortonormalization to get e from u:
-            e[k] = gs(t_sym, u, e[:k], chi)
+            e[k] = gs(t_sym, u, e[:k], chi, w=w)
 
         # complex amplitude at om_k:
-        a_k[k] = inner_prod(t_sym, f_k_chi, e[k])
+        a_k[k] = inner_prod(t_sym, f_k_chi, e[k], w=w)
         # remove spectral line from time-series:
         f_k = f_k - a_k[k]*e[k]
         if (np.abs(a_k[k]) < eps_spec):
