@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from scipy import integrate
+from scipy.optimize import brentq
 
 twopi = 2.*np.pi
 
@@ -266,3 +267,238 @@ def gs(t, u, e, chi, w=None):
     tmp_e = u - np.sum(proj_ue_kj*e, axis=0)
     tmp_e_chi = tmp_e*chi
     return tmp_e/np.sqrt(inner_prod(t, tmp_e_chi, tmp_e, w=w))
+#-------------------------------------------------
+# DFT-only frequency analysis (Hunter 2002, Space Sci. Rev. 102, 83),
+# used by naif.hunt_peak_freqs
+#--------------------
+def hunter_window_coeffs(p):
+    r""" Coefficients c_l (l = -p..p) of the windowed DFT
+
+    Multiplying a time series by the window chi_p (periodic over the
+    time base-line 2T) is equivalent to convolving its DFT
+    coefficients F_k with c_l, i.e.
+    F^(p)_k = \sum_{l=-p}^{p} c_l F_{k+l}, with
+    c_l = (p!)^2/[(p-l)!(p+l)!] = (p!)^2/(2p)! * binom(2p, l+p).
+    This is the binomial expansion of the window (Hunter 2002, eq. 7)
+    using eq. (8), written by Hunter for G^(p)_k in the first line of
+    eq. (36); it is equivalent to p applications of the recursion of
+    eq. (10).
+
+    Parameters
+    ----------
+    p: int
+       Window parameter (p=0: no window, p=1: Hanning)
+
+    Returns
+    -------
+    float array (size 2p+1)
+       Coefficients c_{-p}, ..., c_p
+    """
+    fp = math.factorial(p)
+    return np.array([fp**2/(math.factorial(p - l)*math.factorial(p + l))
+                     for l in range(-p, p + 1)])
+#--------------------
+def _dsinc(theta, N):
+    """ Discrete sinc S(theta) = sin(theta)/[2N tan(theta/2N)] (eq. 11)
+
+    Normalized DFT of exp(i nu t) at the k-th coefficient, with
+    theta = nu*T - k*pi. Periodic with period 2*N*pi, S(0) = 1.
+    """
+    th = np.asarray(theta, dtype=float)
+    # reduce to [-N pi, N pi) using the 2 N pi periodicity:
+    th = np.remainder(th + N*np.pi, 2.*N*np.pi) - N*np.pi
+    out = np.ones_like(th)
+    nz = np.abs(th) > 1e-12
+    out[nz] = np.sin(th[nz])/(2.*N*np.tan(th[nz]/(2.*N)))
+    return out
+#--------------------
+def hunter_kernel(theta, N, p):
+    r""" Windowed DFT of a pure exponential, S^(p)(theta)
+
+    G^(p)_k(nu) = S^(p)(theta), with theta = nu*T - k*pi
+    (Hunter 2002, eqs. 11-12).
+
+    Parameters
+    ----------
+    theta: float or float array
+       nu*T - k*pi
+    N: int
+       Half the number of points in the DFT (2N points)
+    p: int
+       Window parameter
+
+    Returns
+    -------
+    float array
+       S^(p)(theta)
+    """
+    c = hunter_window_coeffs(p)
+    theta = np.asarray(theta, dtype=float)
+    return sum(cl*_dsinc(theta - l*np.pi, N)
+               for cl, l in zip(c, range(-p, p + 1)))
+#--------------------
+def hunter_ratio(theta, N, p):
+    r""" Ratio of adjacent windowed coefficients of a pure exponential
+
+    G^(p)_{k-1}/G^(p)_k = S^(p)(theta + pi)/S^(p)(theta) (eq. 15).
+    It decreases monotonically from +inf to 0 for
+    -(p+1)pi < theta < p pi.
+    """
+    return hunter_kernel(theta + np.pi, N, p)/hunter_kernel(theta, N, p)
+#--------------------
+def hunter_theta_brentq(C, N, p, xtol=1e-14):
+    r""" Solves the exact ratio equation S^(p)(theta + pi)/S^(p)(theta) = C
+
+    This is Hunter (2002, eq. 15; also eq. 33), with the finite-N
+    kernel S^(p) of eqs. (11)-(12). Hunter (2002, Appendix, eqs.
+    34-37) shows that it is a polynomial equation of degree 2p in
+    tau = tan(theta/2N). For C > 0 all but two of its roots are
+    complex, and only one real root lies in -(p+1)pi < theta < p pi,
+    where S^(p)(theta + pi)/S^(p)(theta) > 0 (Sec. 3.2, below eq. 15);
+    Hunter takes theta from that root of the polynomial. Here,
+    instead, the same root is bracketed in that interval and found
+    with Brent's method (scipy.optimize.brentq), because expanding the
+    polynomial in the monomial basis is ill-conditioned for p >~ 3.
+
+    Exact for any N and p, including p = 0, to abs(delta theta) ~ 1e-12
+    (limited by round-off in S^(p)). Each call evaluates the ratio
+    ~10-20 times, so it is ~1e3-1e4 times slower than
+    naif._base_funcs.hunter_theta_closed.
+
+    Parameters
+    ----------
+    C: float (> 0)
+       Measured ratio F^(p)_{k-1}/F^(p)_k
+    N: int
+       Half the number of points in the DFT
+    p: int
+       Window parameter
+    xtol: float, optional
+       Absolute tolerance on theta passed to scipy.optimize.brentq
+
+    Returns
+    -------
+    float
+       theta = nu*T - k*pi
+    """
+    eps = 1e-10
+    lo = -(p + 1)*np.pi + eps
+    hi = p*np.pi - eps
+    g = lambda th: hunter_ratio(th, N, p) - C
+    return brentq(g, lo, hi, xtol=xtol, rtol=4*np.finfo(float).eps)
+#--------------------
+def hunter_theta_closed(C, p):
+    r""" Closed-form solution of the ratio equation in the large-N limit
+
+    In the limit N -> infinity the windowed kernel of Hunter (2002,
+    eq. 12) becomes (Hunter 2002, eq. 14)
+
+        S^(p)(theta) = sin(theta) / [theta prod_{j=1}^{p} (1 - theta^2/(j pi)^2)].
+
+    With x = theta/pi, the products in S^(p)(theta + pi)/S^(p)(theta)
+    telescope and the ratio equation (Hunter 2002, eq. 15) becomes
+
+        (p - x)/(p + 1 + x) = C,
+
+    which is linear in x, so
+
+        theta = pi [p - C (p + 1)]/(1 + C).
+
+    For every C > 0 this lies in -(p+1)pi < theta < p pi, the range
+    of the real root that Hunter (2002, Sec. 3.2 and Appendix) selects.
+    The large-N ratio itself is given in the caption of Hunter's
+    Fig. 2, S^(p)(theta + pi)/S^(p)(theta) ~ (p pi - theta)/[theta + (p+1)pi];
+    the expression above is its inverse. Hunter solves instead the
+    exact finite-N equation (Appendix, eqs. 33-37); see
+    naif._base_funcs.hunter_theta_brentq.
+
+    Accuracy (measured against the exact finite-N equation, with N
+    half the number of points in the time series):
+
+    - p >= 1: the finite-N corrections cancel; abs(delta theta) <~ 3e-11
+      at N = 500 and at round-off (~1e-12) for N >= 1000, i.e. as
+      accurate as naif._base_funcs.hunter_theta_brentq.
+    - p = 0: abs(delta theta) ~ 0.25/N^2 (1e-6 at N = 500, 1e-8 at
+      N = 5000); prefer naif._base_funcs.hunter_theta_brentq.
+
+    Parameters
+    ----------
+    C: float (> 0)
+       Measured ratio F^(p)_{k-1}/F^(p)_k
+    p: int
+       Window parameter
+
+    Returns
+    -------
+    float
+       theta = nu*T - k*pi
+    """
+    return np.pi*(p - C*(p + 1))/(1. + C)
+#--------------------
+def hunter_dft(f, t):
+    r""" Centred DFT of a time series, as in Hunter (2002, eq. 6)
+
+    Uses 2N+1 uniformly spaced samples covering [t_c - T, t_c + T]
+    (if len(f) is even, the last sample is dropped). The two end
+    points are averaged (the series is treated as periodic with
+    period 2T), and F_k = (1/2N) sum_{n=1-N}^{N} f(t_c + n dt)
+    exp(-i pi n k/N), k = 1-N..N.
+
+    Parameters
+    ----------
+    f: float or complex array
+       Time series
+    t: float array
+       Uniformly spaced times
+
+    Returns
+    -------
+    F: complex array (size 2N)
+       DFT coefficients, in np.fft order of k
+    k: int array (size 2N)
+       Integer index k of each coefficient (frequency k*pi/T)
+    N: int
+    T: float
+       Half of the time base-line used
+    t_c: float
+       Time origin (center) of the DFT
+    """
+    f = np.asarray(f)
+    t = np.asarray(t, dtype=float)
+    M = len(f)
+    if M % 2 == 0:
+        f = f[:-1]
+        t = t[:-1]
+        M -= 1
+    N = (M - 1)//2
+    if N < 2:
+        raise ValueError('time series is too short')
+    dt = (t[-1] - t[0])/(2*N)
+    T = N*dt
+    t_c = t[N]
+    # samples for n = 0..N-1, n = N (averaged ends), n = 1-N..-1:
+    h = np.concatenate([f[N:2*N], [0.5*(f[0] + f[2*N])], f[1:N]])
+    F = np.fft.fft(h)/(2*N)
+    k = np.rint(np.fft.fftfreq(2*N, 1./(2*N))).astype(int)
+    return F, k, N, T, t_c
+#--------------------
+def hunter_window(F, p):
+    r""" Windowed DFT via the 3-point recursion (Hunter 2002, eq. 10)
+
+    F^(q)_k = q/(2q-1) [F^(q-1)_{k-1}/2 + F^(q-1)_k + F^(q-1)_{k+1}/2]
+
+    Parameters
+    ----------
+    F: complex array
+       Unwindowed DFT coefficients (np.fft order, periodic in k)
+    p: int
+       Window parameter
+
+    Returns
+    -------
+    complex array
+       F^(p)_k
+    """
+    for q in range(1, p + 1):
+        F = q/(2.*q - 1.)*(0.5*np.roll(F, 1) + F + 0.5*np.roll(F, -1))
+    return F
