@@ -114,3 +114,18 @@ def test_closed_p0_warns():
 def test_bad_theta_solver_raises():
     with pytest.raises(ValueError):
         naif.hunt_peak_freqs(_signal(T_ARR), T_ARR, theta_solver='newton')
+
+
+def test_no_divide_by_zero_at_k0():
+    # Lines exactly on the bins k=-1 and k=-2 (amplitude -0.7): the leading
+    # coefficient is at k=-1, the pair (k-1, k)=(-2, -1) gives a negative
+    # ratio, and the next pair would divide by F^(p)_0, which is exactly zero
+    # after removing the mean. The frequency falls back to the bin value.
+    import warnings
+    N, T = 1000, 50.
+    t = np.linspace(-T, T, 2*N + 1)
+    f = np.exp(-1j*np.pi*t/T) - 0.7*np.exp(-2j*np.pi*t/T)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        om, a = naif.hunt_peak_freqs(f, t, verbose=False)
+    assert abs(om*T/np.pi + 1) < 1e-12

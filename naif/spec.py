@@ -332,6 +332,10 @@ def hunt_peak_freqs(f_k, t, n_freqs=1, p=1, spec=False,
         pairs = [ip, i] if absF[ip] > absF[im] else [i, ip]
         nu = None
         for ik in pairs:
+            # F^(p)_ik can be exactly zero, e.g. at k = 0 once the mean has
+            # been removed (pair (-1, 0)); the ratio is undefined there.
+            if Fp[ik] == 0:
+                continue
             C = np.real(Fp[(ik - 1) % n2]/Fp[ik])
             if np.isfinite(C) and C > 0:
                 try:

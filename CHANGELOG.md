@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- `hunt_peak_freqs`: no more `RuntimeWarning: divide by zero` when the
+  leading line is at the lowest negative frequency (k = -1) and the
+  first pair of coefficients gives no usable ratio. The next pair would
+  divide by the coefficient at k = 0, which is exactly zero once the mean
+  is removed; that pair is now skipped. Results are unchanged: the
+  frequency still falls back to the DFT bin value, as in 0.1.5.
+
 ## 0.1.5 (2026-11-25)
 
 ### New: `naif.hunt_peak_freqs`
